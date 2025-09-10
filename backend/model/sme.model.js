@@ -4,7 +4,9 @@ const userSchema = new mongoose.Schema(
  {
     name: { type: String, required: true },
     email: { type: String, unique: true },
-    password: { type: String, required: true }, // later you can hash it with bcrypt
+    password: { type: String, required: true },
+    bvn: { type: String, unique: true },
+     // later you can hash it with bcrypt
   },
   { timestamps: true }
 );
