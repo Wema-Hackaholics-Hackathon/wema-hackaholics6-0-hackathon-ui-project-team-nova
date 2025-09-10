@@ -12,7 +12,7 @@ app.get("/", (req,res)=>{
 
 
 const userRoute = require("../backend/routes/user.routes")
-app.use("/api/user", userRoute)
+app.use("/api/v1", userRoute)
 
 const mongodbUrl = process.env.MONGODB_URL
 const port = 4000
