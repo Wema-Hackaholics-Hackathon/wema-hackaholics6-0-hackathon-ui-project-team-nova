@@ -18,3 +18,4 @@ router.get("/getbudget/:userId", getBudgets)
 
 router.get("/getmonthlyspending",  getMonthlyCategorySpending)
 module.exports = router
+

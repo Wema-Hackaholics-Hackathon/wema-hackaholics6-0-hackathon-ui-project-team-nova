@@ -13,7 +13,7 @@ const createTransaction = async (req, res) => {
     await account.save();
 
     const tx = await Transaction.insertMany({
-        userId, accountId, type, amount, description
+        userId, accountId, type, amount, description, category
    
     })
     res.json(tx);
@@ -25,35 +25,42 @@ const createTransaction = async (req, res) => {
 const getTransactions = async (req, res) => {
   try {
     const { userId } = req.query;
-    const tx = await Transaction.find({ userId }).sort({ date: -1 });
-    res.json(tx);
+
+    // find main account
+    const mainAccount = await Account.findOne({ userId, main: true });
+    if (!mainAccount) return res.status(404).json({ message: "Main account not found" });
+
+    // fetch transactions for main account only
+    const transactions = await Transaction.find({ accountId: mainAccount._id }).sort({ date: -1 });
+
+    res.json({ success: true, account: mainAccount, transactions });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
 
-const getMonthlyCategorySpending = async (req, res) => {
+ const getMonthlyCategorySpending = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { accountId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid userId" });
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return res.status(400).json({ message: "Invalid accountId" });
     }
 
-    // group all debit (spending) transactions by month & category
+    // group all debit transactions by month & category for the given account
     const spending = await Transaction.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+          accountId: new mongoose.Types.ObjectId(accountId),
           type: "debit",
         },
       },
       {
         $group: {
           _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
+            year: { $year: "$date" },
+            month: { $month: "$date" },
             category: "$category",
           },
           totalSpent: { $sum: "$amount" },
@@ -76,7 +83,6 @@ const getMonthlyCategorySpending = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 module.exports = {
     createTransaction,

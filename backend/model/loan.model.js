@@ -7,6 +7,11 @@ const loanSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+     accountId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Account",
+      required: true, // if every loan must belong to an account
+    },
     provider: { type: String },
     amount: { type: Number, required: true },
     outstanding: { type: Number, required: true },

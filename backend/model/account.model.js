@@ -11,6 +11,7 @@ const accountSchema = new mongoose.Schema(
     number: { type: String, required: true }, // masked or full (demo)
     mask: { type: String },
     balance: { type: Number, default: 0 },
+    main: { type: Boolean, default: false },
     currency: { type: String, default: "NGN" },
   },
   {
