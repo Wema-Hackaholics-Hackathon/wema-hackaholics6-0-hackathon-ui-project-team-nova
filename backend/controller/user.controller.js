@@ -27,6 +27,27 @@ const createUser = async (req, res) => {
     const user = new User({ name, email, password: hashedPassword, bvn });
     await user.save();
 
+
+     const demoAccounts = [
+      {
+        userId: user._id,
+        provider: "DemoBank",
+        number: "1234567890",
+        mask: "****7890",
+        balance: 5000,
+        currency: "NGN",
+      },
+      {
+        userId: user._id,
+        provider: "MockPay",
+        number: "9876543210",
+        mask: "****3210",
+        balance: 12000,
+        currency: "NGN",
+      },
+    ];
+    await Account.insertMany(demoAccounts);
+
     res.status(201).json({
       success: true,
       message: "User created successfully",
