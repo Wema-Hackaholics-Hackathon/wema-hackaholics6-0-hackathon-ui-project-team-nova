@@ -1,12 +1,45 @@
 const Account = require("../model/account.model");
 const User = require("../model/sme.model");
+const bcrypt = require("bcryptjs")
 
-const createUser = async (req, res) => {
+
+
+export const createUser = async (req, res) => {
   try {
-    const { name, bvn } = req.body;
-    const user = new User({ name, bvn });
+    const { name, email, password } = req.body;
+
+    // basic validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
     await user.save();
-    res.json(user);
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
