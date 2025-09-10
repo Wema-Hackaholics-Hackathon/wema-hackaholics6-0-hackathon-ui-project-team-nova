@@ -56,3 +56,13 @@ Functional Requirements:
 ○ Integration with the NIBSS BVN API for identity verification.
 ○ A secure and seamless user flow for BVN validation and account linking.
 ○ Compliance with all CBN regulations regarding the use of BVN.
+
+ Credit Card Access
+● Description: A feature that allows users to manage their existing credit cards and
+discover and apply for new credit card offers from Wema Bank and other partner financial
+institutions.
+Functional Requirements:
+○ Ability for users to link their existing credit cards.
+○ A dashboard showing credit card balance, available credit, and transaction history.
+○ A marketplace for credit card offers.
+○ A streamlined application process for new credit cards
