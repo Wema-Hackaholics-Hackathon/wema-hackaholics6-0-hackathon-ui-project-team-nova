@@ -2,16 +2,6 @@ const Account = require("../model/account.model");
 const Budget = require("../model/budget.model");
 const Transaction = require("../model/transaction.model");
 
-const getAccounts = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const accounts = await Account.find({ id });
-    res.json(accounts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
 
 
 const addMoney = async (req, res) => {

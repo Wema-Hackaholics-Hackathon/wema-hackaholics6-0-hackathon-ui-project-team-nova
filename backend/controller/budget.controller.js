@@ -1,4 +1,6 @@
 const Budget = require("../model/budget.model");
+
+
 const createBudget = async (req, res) => {
   try {
     const { userId } = req.params;  // 👈 from URL
