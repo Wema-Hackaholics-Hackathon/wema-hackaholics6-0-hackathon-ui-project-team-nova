@@ -6,16 +6,17 @@ const Transaction = require("../model/transaction.model");
 const createTransaction = async (req, res) => {
   try {
     const { userId, accountId, type, amount, description, category } = req.body;
+    console.log(accountId)
     const account = await Account.findById(accountId);
     if (!account) return res.status(404).json({ message: "Account not found" });
 
     account.balance += type === "credit" ? amount : -amount;
     await account.save();
 
-    const tx = await Transaction.insertMany({
+    const tx = await Transaction.insertMany([{
         userId, accountId, type, amount, description, category
    
-    })
+    }])
     res.json(tx);
   } catch (err) {
     res.status(500).json({ message: err.message });
