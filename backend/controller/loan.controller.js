@@ -1,8 +1,8 @@
-import Loan from "../models/Loan.js";
-import Account from "../models/Account.js";
-import Transaction from "../models/Transaction.js";
+const Account = require("../model/account.model");
+const Loan = require("../model/loan.model");
 
-export const createMultipleLoans = async (req, res) => {
+
+ const createMultipleLoans = async (req, res) => {
   try {
     const { loans } = req.body; // array of loan objects: [{accountId, amount, dueDate}, ...]
 
@@ -27,21 +27,6 @@ export const createMultipleLoans = async (req, res) => {
 
       await loan.save();
 
-      // credit the account balance to simulate disbursement
-      account.balance += Number(l.amount);
-      await account.save();
-
-      // log transaction
-      const tx = new Transaction({
-        userId: account.userId,
-        accountId: account._id,
-        type: "credit",
-        amount: Number(l.amount),
-        description: "Loan disbursement",
-        category: "Loan",
-      });
-      await tx.save();
-
       createdLoans.push(loan);
     }
 
@@ -55,3 +40,10 @@ export const createMultipleLoans = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
+
+module.exports = {
+    createMultipleLoans
+}
