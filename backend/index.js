@@ -6,11 +6,13 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-
-
 app.get("/", (req,res)=>{
      res.send("hello welocme to port 4000")
 })
+
+
+const userRoute = require("../backend/routes/user.routes")
+app.use("/api/user", userRoute)
 
 const mongodbUrl = process.env.MONGODB_URL
 const port = 4000
