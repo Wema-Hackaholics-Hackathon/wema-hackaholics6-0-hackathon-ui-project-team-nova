@@ -13,10 +13,10 @@ const createTransaction = async (req, res) => {
     account.balance += type === "credit" ? amount : -amount;
     await account.save();
 
-    const tx = await Transaction.insertMany([{
+    const tx = await Transaction.create({
         userId, accountId, type, amount, description, category
    
-    }])
+    })
     res.json(tx);
   } catch (err) {
     res.status(500).json({ message: err.message });
