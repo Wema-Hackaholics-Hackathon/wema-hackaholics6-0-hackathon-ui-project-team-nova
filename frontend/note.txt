@@ -1,0 +1,58 @@
+ Product Features
+4.1. Unified Bank Accounts
+● Description: Users will be able to securely link all their Nigerian bank accounts to the
+ALAT app using Open Banking APIs.
+Functional Requirements:
+○ Integration with a leading Open Banking API provider in Nigeria (e.g., Okra, Mono).
+○ Secure user consent flow for account linking.
+○ Real-time balance and transaction data synchronization.
+○ Ability to add and remove linked accounts.
+
+ Budget Tracker
+● Description: An intelligent budget tracker that automatically categorizes transactions
+from all linked accounts and helps users set and monitor their spending goals.
+Functional Requirements:
+○ Automatic transaction categorization (e.g., food, transport, entertainment).
+○ Ability for users to create custom categories and budgets.
+○ Visual representation of spending through charts and graphs.
+○ Push notifications for budget alerts.
+
+Card Subscription Tracker
+● Description: A feature that identifies and tracks recurring payments and subscriptions
+from linked bank accounts, allowing users to manage them effectively.
+Functional Requirements:
+○ Automatic detection of recurring payments.
+○ A dashboard showing all active subscriptions with payment dates and amounts.
+○ Ability for users to manually add or remove subscriptions.
+○ Reminders for upcoming subscription renewals.
+
+Credit Health Meter
+● Description: An innovative tool that provides users with a dynamic "Credit Health Score"
+based on their financial activities across all linked accounts.
+Functional Requirements:
+○ An algorithm that calculates a credit health score based on:
+■ Transaction history: Income stability, average account balance, spending
+habits.
+■ Card subscriptions: Number and type of active subscriptions.
+■ Debts: Outstanding loan balances, repayment history.
+○ A dashboard displaying the credit health score and the factors influencing it.
+○ Personalized recommendations for improving the score
+
+Loan Tracker
+● Description: A feature that allows users to track their existing loans from recognized
+financial institutions in one place.
+Functional Requirements:
+○ Ability for users to manually add loan details (lender, amount, interest rate, tenure).
+○ Integration with financial institutions to automatically fetch loan data (where
+possible).
+○ A dashboard showing all active loans with their repayment status.
+○ Reminders for upcoming loan payments.
+
+BVN API to Link All Financial Accounts
+● Description: The core technology that will enable users to securely link their financial
+accounts. The BVN will be used for identity verification and to authorize the linking of
+accounts.
+Functional Requirements:
+○ Integration with the NIBSS BVN API for identity verification.
+○ A secure and seamless user flow for BVN validation and account linking.
+○ Compliance with all CBN regulations regarding the use of BVN.
