@@ -1,6 +1,7 @@
 const express = require("express")
 const { createUser, linkBvn, loginUser } = require("../controller/user.controller")
 const { createTransaction, getTransactions } = require("../controller/transaction.controller")
+const { addMoney, getAccounts } = require("../controller/account.controller")
 const router  = express.Router()
 
 
@@ -9,4 +10,6 @@ router.post("/login", loginUser)
 router.post("/linkbvn", linkBvn)
 router.post("/createTransact", createTransaction)
 router.get("/transaction", getTransactions)
+router.post("/addmoney", addMoney)
+router.get("/getaccount", getAccounts)
 module.exports = router

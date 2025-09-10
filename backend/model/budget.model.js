@@ -9,6 +9,11 @@ const budgetSchema = new mongoose.Schema(
     },
     category: { type: String, required: true },
     percentage: { type: Number, required: true },
+    allocated: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
+
+
+const Budget = mongoose.model("budget", budgetSchema)
+module.exports = Budget
