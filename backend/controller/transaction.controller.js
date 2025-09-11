@@ -41,52 +41,66 @@ const getTransactions = async (req, res) => {
 };
 
 
- const getMonthlyCategorySpending = async (req, res) => {
+const getCurrentMonthCategorySpending = async (req, res) => {
   try {
     const { accountId } = req.params;
 
+    // 1️⃣ Validate accountId
     if (!mongoose.Types.ObjectId.isValid(accountId)) {
       return res.status(400).json({ message: "Invalid accountId" });
     }
+    const accountObjectId = new mongoose.Types.ObjectId(accountId);
 
-    // group all debit transactions by month & category for the given account
+    // 2️⃣ Get current month & year
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // JS months: 0-11
+    const currentYear = now.getFullYear();
+
+    // 3️⃣ Aggregate transactions for this account and current month
     const spending = await Transaction.aggregate([
       {
         $match: {
-          accountId: new mongoose.Types.ObjectId(accountId),
-          type: "debit",
-        },
+          accountId: accountObjectId,      // Only this account
+          type: "debit",                  // Only spending
+          $expr: {
+            $and: [
+              { $eq: [{ $month: "$date" }, currentMonth] },
+              { $eq: [{ $year: "$date" }, currentYear] }
+            ]
+          }
+        }
       },
       {
         $group: {
-          _id: {
-            year: { $year: "$date" },
-            month: { $month: "$date" },
-            category: "$category",
-          },
-          totalSpent: { $sum: "$amount" },
-        },
+          _id: "$category",               // Group by category
+          totalSpent: { $sum: "$amount" } // Sum the amount per category
+        }
       },
       {
         $project: {
-          year: "$_id.year",
-          month: "$_id.month",
-          category: "$_id.category",
-          totalSpent: 1,
           _id: 0,
-        },
+          category: "$_id",
+          totalSpent: 1
+        }
       },
-      { $sort: { year: 1, month: 1, category: 1 } },
+      { $sort: { totalSpent: -1 } } // Optional: sort by highest spending first
     ]);
 
-    res.json({ success: true, spending });
+    res.json({ success: true, month: currentMonth, year: currentYear, spending });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
 
+
+
+
+
+
 module.exports = {
     createTransaction,
     getTransactions,
-    getMonthlyCategorySpending
+   getCurrentMonthCategorySpending
 }

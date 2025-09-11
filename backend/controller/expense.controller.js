@@ -8,60 +8,60 @@ const spendMoney = async (req, res) => {
     const { accountId } = req.params;
     const { amount, category, description } = req.body;
 
+    if (!amount || !category) {
+      return res.status(400).json({ message: "Amount and category are required" });
+    }
+
+    const numericAmount = Number(amount);
+    if (numericAmount <= 0) {
+      return res.status(400).json({ message: "Amount must be greater than zero" });
+    }
+
+    // 1️⃣ Find the main account
     const account = await Account.findById(accountId);
     if (!account) return res.status(404).json({ message: "Account not found" });
 
+    // 2️⃣ Get user's budgets
     const budgets = await Budget.find({ userId: account.userId });
 
-    let remainingAmount = Number(amount);
-    let allocations = [];
+    // 3️⃣ Find the selected category
+    const budget = budgets.find(b => b.category === category);
+    if (!budget) return res.status(400).json({ message: `Budget category "${category}" not found` });
 
-    // First, deduct from the selected category if it exists
-    if (category) {
-      const budget = budgets.find(b => b.category === category);
-      if (budget) {
-        const deduction = Math.min(budget.allocated, remainingAmount);
-        budget.allocated -= deduction;
-        remainingAmount -= deduction;
-        await budget.save();
-        allocations.push({ category: budget.category, deducted: deduction });
-      }
+    // 4️⃣ Check if category has enough allocated funds
+    if (budget.allocated < numericAmount) {
+      return res.status(400).json({ message: "Insufficient funds in this budget category" });
     }
 
-    // Then deduct from other budgets proportionally
-    if (remainingAmount > 0 && budgets.length > 0) {
-      for (const b of budgets) {
-        if (b.category === category) continue; // already deducted
-        const deduction = Math.min(b.allocated, remainingAmount);
-        b.allocated -= deduction;
-        remainingAmount -= deduction;
-        await b.save();
-        allocations.push({ category: b.category, deducted: deduction });
-        if (remainingAmount <= 0) break;
-      }
-    }
+    // 5️⃣ Deduct from budget and main account balance
+    budget.allocated -= numericAmount;
+    await budget.save();
 
-    // Finally, deduct remaining from main balance
-    if (remainingAmount > 0) {
-      if (account.balance < remainingAmount) return res.status(400).json({ message: "Insufficient funds" });
-      account.balance -= remainingAmount;
-      await account.save();
-      allocations.push({ category: "Main Balance", deducted: remainingAmount });
-    }
+    account.balance -= numericAmount;
+    await account.save();
 
+    // 6️⃣ Create transaction
     const tx = new Transaction({
       userId: account.userId,
       accountId: account._id,
       type: "debit",
-      amount: amount,
-      category: category || "General",
-      description,
+      amount: numericAmount,
+      category,
+      description: description || `Spent from ${category}`,
     });
     await tx.save();
 
-    res.json({ success: true, allocations, balance: account.balance, transaction: tx });
+    // 7️⃣ Return response
+    res.json({
+      success: true,
+      message: `Spent ${numericAmount} from ${category}`,
+      allocations: [{ category: budget.category, deducted: numericAmount }],
+      balance: account.balance,
+      transaction: tx,
+    });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
