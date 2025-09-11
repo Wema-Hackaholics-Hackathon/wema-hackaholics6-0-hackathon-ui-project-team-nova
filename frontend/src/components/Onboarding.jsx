@@ -1,19 +1,32 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AccountLinkWidget from "../components/AccountLinkWidget"; // Mono/Okra widget
 import useAccounts from "../hooks/useAccounts";
 import AccountCard from "../components/AccountCard";
 import SubscriptionList from "../components/SubscriptionList";
 import { Button } from "../components/ui/button";
 import { toast } from "react-toastify";
 
+// Import mock data
+import {
+  mockAccounts,
+  mockTransactions,
+  mockSubscriptions,
+} from "../mock/mockData"; // adjust path if needed
+
 export default function Onboarding({ onFinish }) {
   const navigate = useNavigate();
-  const { accounts, addAccount, removeAccount, subscriptions, setSubscriptions, transactions } =
-    useAccounts();
+  const {
+    accounts,
+    addAccount,
+    removeAccount,
+    subscriptions,
+    setSubscriptions,
+    setTransactions,
+    transactions,
+  } = useAccounts();
 
-  // Steps: 1-Link Accounts, 2-BVN, 3-View Accounts, 4-Subscriptions, 5-Done
+  // Steps: 1-BVN, 2-Accounts, 3-Subscriptions, 4-Done
   const [step, setStep] = useState(1);
   const [bvn, setBvn] = useState("");
   const [bvnError, setBvnError] = useState("");
@@ -21,14 +34,22 @@ export default function Onboarding({ onFinish }) {
 
   // Navigation
   const nextStep = async () => {
-    if (step === 2) {
+    if (step === 1) {
       if (!validateBVN()) return;
       setBvnLoading(true);
       try {
-        // Simulate API verification delay (replace with real Mono/Okra BVN call)
+        // Simulate API verification delay
         await new Promise((res) => setTimeout(res, 1500));
         toast.success("BVN verified successfully!");
-        setStep(step + 1);
+
+        // ✅ Load mock accounts + transactions immediately
+        mockAccounts.forEach((acc) => addAccount(acc));
+        setTransactions(mockTransactions);
+
+        // Optionally preload subscriptions
+        setSubscriptions(mockSubscriptions);
+
+        setStep(2);
       } catch (err) {
         toast.error("BVN verification failed.");
       } finally {
@@ -37,7 +58,7 @@ export default function Onboarding({ onFinish }) {
       return;
     }
 
-    setStep((s) => Math.min(s + 1, 5));
+    setStep((s) => Math.min(s + 1, 4));
   };
 
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -59,9 +80,14 @@ export default function Onboarding({ onFinish }) {
         Math.abs(tx.amount) < 5000 &&
         tx.description?.toLowerCase().includes("subscription")
     );
+
     const merged = [...subscriptions];
     detected.forEach((d) => {
-      if (!merged.find((m) => m.vendor?.toLowerCase() === d.description?.toLowerCase())) {
+      if (
+        !merged.find(
+          (m) => m.vendor?.toLowerCase() === d.description?.toLowerCase()
+        )
+      ) {
         merged.push({
           id: d.id,
           vendor: d.description,
@@ -71,28 +97,18 @@ export default function Onboarding({ onFinish }) {
         });
       }
     });
+
     setSubscriptions(merged);
-    if (detected.length > 0) toast.success(`${detected.length} subscription(s) detected!`);
+    if (detected.length > 0)
+      toast.success(`${detected.length} subscription(s) detected!`);
     else toast.info("No subscriptions detected");
   };
 
-  // Handle account linking
-  const handleLinked = ({ provider, payload }) => {
-    const newAccounts = (payload.accounts || []).map((a, i) => ({
-      id: `${provider}_${i}_${a.id || a.accountNumber}`,
-      provider: provider.toUpperCase(),
-      accountNumber: a.accountNumber || "xxxx",
-      name: a.name || "Linked Account",
-      balance: a.balance || 0,
-    }));
-    newAccounts.forEach((a) => addAccount(a));
-    toast.success("Bank account linked successfully!");
-  };
-
-  // Automatically finish onboarding when step 5 is reached
+  // Automatically finish onboarding when step 4 is reached
   useEffect(() => {
-    if (step === 5) {
+    if (step === 4) {
       const timeout = setTimeout(() => {
+        toast.success("Onboarding complete! Redirecting to dashboard...");
         if (onFinish) onFinish();
         navigate("/dashboard");
       }, 1500);
@@ -102,33 +118,28 @@ export default function Onboarding({ onFinish }) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 p-4">
-      <h2 className="text-xl font-semibold text-center">Welcome to CampusCart Finance</h2>
+      <h2 className="text-xl font-semibold text-center">
+        Welcome to ALAT Companion
+      </h2>
 
       {/* Step Indicator */}
       <div className="flex justify-between mb-4 text-sm text-slate-500">
-        <span className={step >= 1 ? "font-semibold" : ""}>1. Link Accounts</span>
-        <span className={step >= 2 ? "font-semibold" : ""}>2. BVN</span>
-        <span className={step >= 3 ? "font-semibold" : ""}>3. View Accounts</span>
-        <span className={step >= 4 ? "font-semibold" : ""}>4. Subscriptions</span>
-        <span className={step >= 5 ? "font-semibold" : ""}>5. Done</span>
+        <span className={step >= 1 ? "font-semibold" : ""}>1. BVN</span>
+        <span className={step >= 2 ? "font-semibold" : ""}>2. View Accounts</span>
+        <span className={step >= 3 ? "font-semibold" : ""}>3. Subscriptions</span>
+        <span className={step >= 4 ? "font-semibold" : ""}>4. Done</span>
       </div>
 
       {/* Step Content */}
       {step === 1 && (
         <div className="space-y-4">
           <p className="text-sm text-slate-600 text-center">
-            Connect your bank accounts securely.
-          </p>
-          <AccountLinkWidget onLinked={handleLinked} />
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-4">
-          <p className="text-sm text-slate-600 text-center">
             Enter your Bank Verification Number (BVN)
           </p>
-          <label htmlFor="bvn" className="block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="bvn"
+            className="block text-sm font-medium text-slate-700"
+          >
             BVN
           </label>
           <input
@@ -144,7 +155,7 @@ export default function Onboarding({ onFinish }) {
         </div>
       )}
 
-      {step === 3 && (
+      {step === 2 && (
         <div className="space-y-4">
           {accounts.length ? (
             <div className="grid md:grid-cols-2 gap-4">
@@ -153,25 +164,31 @@ export default function Onboarding({ onFinish }) {
               ))}
             </div>
           ) : (
-            <div className="text-sm text-slate-500 text-center">No accounts linked yet.</div>
+            <div className="text-sm text-slate-500 text-center">
+              No accounts found yet.
+            </div>
           )}
         </div>
       )}
 
-      {step === 4 && (
+      {step === 3 && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">We can detect recurring subscriptions for you:</p>
+          <p className="text-sm text-slate-600">
+            We can detect recurring subscriptions for you:
+          </p>
           <Button onClick={detectSubscriptions}>Detect Subscriptions</Button>
           {subscriptions.length > 0 && (
             <SubscriptionList
               subscriptions={subscriptions}
-              onRemove={(id) => setSubscriptions((prev) => prev.filter((s) => s.id !== id))}
+              onRemove={(id) =>
+                setSubscriptions((prev) => prev.filter((s) => s.id !== id))
+              }
             />
           )}
         </div>
       )}
 
-      {step === 5 && (
+      {step === 4 && (
         <div className="text-center space-y-4">
           <p className="text-lg font-medium">You're all set!</p>
           <p className="text-sm text-slate-600">Redirecting to dashboard...</p>
@@ -180,10 +197,18 @@ export default function Onboarding({ onFinish }) {
 
       {/* Navigation */}
       <div className="flex justify-between mt-6">
-        {step > 1 && <Button variant="ghost" onClick={prevStep}>Back</Button>}
-        {step < 5 && (
-          <Button onClick={nextStep} className="ml-auto" disabled={bvnLoading && step === 2}>
-            {step === 2 && bvnLoading ? "Verifying..." : "Next"}
+        {step > 1 && (
+          <Button variant="ghost" onClick={prevStep}>
+            Back
+          </Button>
+        )}
+        {step < 4 && (
+          <Button
+            onClick={nextStep}
+            className="ml-auto"
+            disabled={bvnLoading && step === 1}
+          >
+            {step === 1 && bvnLoading ? "Verifying..." : "Next"}
           </Button>
         )}
       </div>

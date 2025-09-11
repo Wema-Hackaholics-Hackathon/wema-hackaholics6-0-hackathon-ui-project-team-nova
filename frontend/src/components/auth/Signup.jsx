@@ -68,7 +68,7 @@ export default function Signup({ onSuccess }) {
     if (!validateStep()) return;
 
     if (step === 1) {
-      toast.info(`OTP for demo: ${DEMO_OTP}`);
+      toast.info(`OTP has been sent to ${form.email || form.phone}` );
       setStep(2);
     } else if (step === 2) {
       setStep(3);

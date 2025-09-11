@@ -12,6 +12,8 @@ export default function CreditHealth() {
 
   const monthlyIncome = 150000; // mock - in a real app infer from credit transactions
   const monthlyExpenses = 80000;
+  const surplus = monthlyIncome - monthlyExpenses;
+
   const outstandingDebt = loans.reduce((s, l) => s + (l.outstanding || 0), 0);
   const numSubscriptions = subscriptions.length;
   const repaymentHistory = loans.length
@@ -20,7 +22,7 @@ export default function CreditHealth() {
     : 1;
 
   const params = {
-    incomeStability: 0.9,
+    surplus,
     avgBalance,
     monthlyIncome,
     monthlyExpenses,
