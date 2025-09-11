@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Menu } from "lucide-react";
 import Sidebar from "../SideBar";
+import { Outlet } from "react-router-dom";
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -20,7 +21,10 @@ export default function DashboardLayout({ children }) {
           </button>
         </header>
 
-        <main className="p-6">{children}</main>
+        <main className="p-6">
+          {/* Outlet renders the active child route */}
+          <Outlet />
+        </main>
       </div>
     </div>
   );
