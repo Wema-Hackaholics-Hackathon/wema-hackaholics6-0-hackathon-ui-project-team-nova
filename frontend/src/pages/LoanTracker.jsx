@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import useAccounts from "../hooks/useAccounts";
 import LoanItem from "../components/LoanItem";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 
 export default function LoanTracker() {
   const { loans, setLoans } = useAccounts();
