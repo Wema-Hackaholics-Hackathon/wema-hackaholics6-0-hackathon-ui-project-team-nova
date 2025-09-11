@@ -1,5 +1,6 @@
 const Account = require("../model/account.model");
 const Budget = require("../model/budget.model");
+const Transaction = require("../model/transaction.model");
 
 
 const spendMoney = async (req, res) => {
