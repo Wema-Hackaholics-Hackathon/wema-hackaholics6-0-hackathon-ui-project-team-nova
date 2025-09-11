@@ -87,6 +87,5 @@ const addMoney = async (req, res) => {
 };
 
 module.exports = {
-  getAccounts,
   addMoney,
 };
