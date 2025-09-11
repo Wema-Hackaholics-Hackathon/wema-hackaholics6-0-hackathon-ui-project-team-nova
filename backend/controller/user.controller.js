@@ -6,10 +6,10 @@ const Transaction = require("../model/transaction.model");
 
 const createUser = async (req, res) => {
   try {
-    const { name, email, password, bvn } = req.body;
+    const { name, email, password} = req.body;
 
     // validation
-    if (!name || !email || !password || !bvn)
+    if (!name || !email || !password )
       return res.status(400).json({ message: "All fields are required" });
 
     if (String(bvn).length !== 11)
@@ -19,11 +19,6 @@ const createUser = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already registered" });
 
-    const existingBvn = await User.findOne({ bvn });
-    if (existingBvn)
-      return res
-        .status(400)
-        .json({ message: "BVN already linked to another account" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -71,7 +66,6 @@ const createUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        bvn: user.bvn,
       },
       mainAccount: {
         accountId: mainAccount._id,
