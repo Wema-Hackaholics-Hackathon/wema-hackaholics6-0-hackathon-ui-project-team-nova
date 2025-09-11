@@ -1,38 +1,45 @@
-// /* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import AccountLinkWidget from "../components/AccountLinkWidget";
+import AccountLinkWidget from "../components/AccountLinkWidget"; // Mono/Okra widget
 import useAccounts from "../hooks/useAccounts";
 import AccountCard from "../components/AccountCard";
 import SubscriptionList from "../components/SubscriptionList";
 import { Button } from "../components/ui/button";
+import { toast } from "react-toastify";
 
 export default function Onboarding({ onFinish }) {
   const navigate = useNavigate();
-  const { accounts, addAccount, removeAccount, subscriptions, setSubscriptions, transactions } = useAccounts();
+  const { accounts, addAccount, removeAccount, subscriptions, setSubscriptions, transactions } =
+    useAccounts();
 
   // Steps: 1-Link Accounts, 2-BVN, 3-View Accounts, 4-Subscriptions, 5-Done
   const [step, setStep] = useState(1);
   const [bvn, setBvn] = useState("");
   const [bvnError, setBvnError] = useState("");
-  const [loading, setLoading] = useState(false); // Loader for BVN verification
+  const [bvnLoading, setBvnLoading] = useState(false);
 
   // Navigation
-  const nextStep = () => {
+  const nextStep = async () => {
     if (step === 2) {
       if (!validateBVN()) return;
-      // Simulate BVN verification
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
+      setBvnLoading(true);
+      try {
+        // Simulate API verification delay (replace with real Mono/Okra BVN call)
+        await new Promise((res) => setTimeout(res, 1500));
         toast.success("BVN verified successfully!");
-        setStep((s) => Math.min(s + 1, 5));
-      }, 1500);
-    } else {
-      setStep((s) => Math.min(s + 1, 5));
+        setStep(step + 1);
+      } catch (err) {
+        toast.error("BVN verification failed.");
+      } finally {
+        setBvnLoading(false);
+      }
+      return;
     }
+
+    setStep((s) => Math.min(s + 1, 5));
   };
+
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   // BVN validation
@@ -65,7 +72,8 @@ export default function Onboarding({ onFinish }) {
       }
     });
     setSubscriptions(merged);
-    if (detected.length) toast.success("Subscriptions detected successfully!");
+    if (detected.length > 0) toast.success(`${detected.length} subscription(s) detected!`);
+    else toast.info("No subscriptions detected");
   };
 
   // Handle account linking
@@ -78,7 +86,7 @@ export default function Onboarding({ onFinish }) {
       balance: a.balance || 0,
     }));
     newAccounts.forEach((a) => addAccount(a));
-    if (newAccounts.length) toast.success(`${newAccounts.length} account(s) linked successfully!`);
+    toast.success("Bank account linked successfully!");
   };
 
   // Automatically finish onboarding when step 5 is reached
@@ -172,10 +180,10 @@ export default function Onboarding({ onFinish }) {
 
       {/* Navigation */}
       <div className="flex justify-between mt-6">
-        {step > 1 && <Button variant="ghost" onClick={prevStep} disabled={loading}>Back</Button>}
+        {step > 1 && <Button variant="ghost" onClick={prevStep}>Back</Button>}
         {step < 5 && (
-          <Button onClick={nextStep} className="ml-auto" disabled={loading}>
-            {step === 2 && loading ? "Verifying..." : "Next"}
+          <Button onClick={nextStep} className="ml-auto" disabled={bvnLoading && step === 2}>
+            {step === 2 && bvnLoading ? "Verifying..." : "Next"}
           </Button>
         )}
       </div>
