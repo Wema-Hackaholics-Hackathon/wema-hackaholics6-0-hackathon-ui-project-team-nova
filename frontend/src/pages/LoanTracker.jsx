@@ -3,6 +3,7 @@ import useAccounts from "../hooks/useAccounts";
 import LoanItem from "../components/LoanItem";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { toast } from "react-toastify";
 
 const MOCK_BANK_LOANS = [
   { id: "b1", bank: "First Bank", principal: 100000, rate: 0.18, tenureMonths: 12 },
@@ -21,12 +22,16 @@ export default function LoanTracker() {
     nextDue: "",
   });
 
+  const [loadingLoanId, setLoadingLoanId] = useState(null); // for bank loan buttons
+  const [loadingManual, setLoadingManual] = useState(false); // for manual add
+
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const addLoan = (loanData) => {
+  const addLoan = (loanData, isBankLoan = false) => {
+    const loanId = loanData.id || `l_${Date.now()}`;
     const newLoan = {
-      id: `l_${Date.now()}`,
+      id: loanId,
       lender: loanData.lender,
       principal: Number(loanData.principal),
       outstanding: Number(loanData.outstanding ?? loanData.principal),
@@ -35,18 +40,33 @@ export default function LoanTracker() {
       nextDue: loanData.nextDue || "",
       repaymentHistory: [],
     };
-    setLoans((prev) => [newLoan, ...prev]);
-    // reset form if manual add
-    if (!loanData.id) {
-      setForm({
-        lender: "",
-        principal: "",
-        outstanding: "",
-        rate: "",
-        tenureMonths: "",
-        nextDue: "",
-      });
+
+    if (isBankLoan) {
+      setLoadingLoanId(loanData.id);
+    } else {
+      setLoadingManual(true);
     }
+
+    // simulate async operation
+    setTimeout(() => {
+      setLoans((prev) => [newLoan, ...prev]);
+
+      if (isBankLoan) {
+        toast.success(`Loan from ${loanData.lender} added successfully!`);
+        setLoadingLoanId(null);
+      } else {
+        toast.success(`Manual loan added successfully!`);
+        setLoadingManual(false);
+        setForm({
+          lender: "",
+          principal: "",
+          outstanding: "",
+          rate: "",
+          tenureMonths: "",
+          nextDue: "",
+        });
+      }
+    }, 1500);
   };
 
   return (
@@ -70,16 +90,10 @@ export default function LoanTracker() {
               </div>
               <Button
                 size="sm"
-                onClick={() =>
-                  addLoan({
-                    lender: loan.bank,
-                    principal: loan.principal,
-                    rate: loan.rate,
-                    tenureMonths: loan.tenureMonths,
-                  })
-                }
+                onClick={() => addLoan(loan, true)}
+                disabled={loadingLoanId === loan.id}
               >
-                Apply For Loan
+                {loadingLoanId === loan.id ? "Applying..." : "Apply For Loan"}
               </Button>
             </div>
           ))}
@@ -124,8 +138,12 @@ export default function LoanTracker() {
             </div>
           ))}
           <div className="pt-2">
-            <Button className="w-full md:w-auto" onClick={() => addLoan(form)}>
-              Add Loan
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => addLoan(form, false)}
+              disabled={loadingManual}
+            >
+              {loadingManual ? "Adding..." : "Add Loan"}
             </Button>
           </div>
         </div>
