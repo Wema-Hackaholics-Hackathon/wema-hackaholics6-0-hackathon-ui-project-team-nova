@@ -4,6 +4,7 @@ const { createTransaction, getTransactions, getMonthlyCategorySpending } = requi
 const { addMoney} = require("../controller/account.controller")
 const { createBudget, getBudgets } = require("../controller/budget.controller")
 const { createMultipleLoans } = require("../controller/loan.controller")
+const spendMoney = require("../controller/expense.controller")
 const router  = express.Router()
 
 
@@ -17,5 +18,6 @@ router.post("/createBudget/:userId", createBudget)
 router.get("/getbudget/:userId", getBudgets)
 router.post("/createloans", createMultipleLoans)
 router.get("/getmonthlyspending/:accountId",  getMonthlyCategorySpending)
+router.post("/spendmoney/:accountId", spendMoney)
 module.exports = router
 
