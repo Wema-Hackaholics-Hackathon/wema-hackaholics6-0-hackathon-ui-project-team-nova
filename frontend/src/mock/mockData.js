@@ -23,6 +23,14 @@ export const mockAccounts = [
     balance: 450000.75,
     currency: "NGN",
   },
+   {
+    id: "acc_4",
+    provider: "Access Bank",
+    accountNumber: "2233445566",
+    name: "Business Account",
+    balance: 45000.75,
+    currency: "NGN",
+  },
 ];
 
 export const mockTransactions = [
@@ -34,6 +42,8 @@ export const mockTransactions = [
   { id: "t6", accountId: "acc_1", date: "2025-06-25", description: "Entertainment", amount: -15000, type: "debit" },
   { id: "t7", accountId: "acc_3", date: "2025-09-07", description: "POS Purchase - Lagos", amount: -65000, type: "debit" },
   { id: "t8", accountId: "acc_3", date: "2025-09-01", description: "Client Transfer", amount: +300000, type: "credit" },
+    { id: "t9", accountId: "acc_1", date: "2025-09-03", description: "Office Salary 2", amount: +150000, type: "credit" },
+
 ];
 
 export const mockSubscriptions = [
