@@ -1,5 +1,5 @@
 // /* eslint-disable no-unused-vars */
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import useTransactions from "../hooks/useTransactions";
 import useAccounts from "../hooks/useAccounts";
 import { categorizeTransaction } from "../utils/categorizer";
@@ -27,6 +27,15 @@ export default function BudgetTracker() {
   });
   const [budgetForm, setBudgetForm] = useState({ ...budgetPercentages });
 
+  // keep a local transactions state for simulation
+  const [localTx, setLocalTx] = useState(transactions);
+  const prevTxRef = useRef([]);
+
+  // sync localTx with real ones
+  useEffect(() => {
+    setLocalTx(transactions);
+  }, [transactions]);
+
   const onBudgetChange = (category, value) => {
     const num = Number(value);
     if (!isNaN(num) && num >= 0 && num <= 100) {
@@ -41,9 +50,10 @@ export default function BudgetTracker() {
       return;
     }
     setBudgetPercentages({ ...budgetForm });
-    toast.success("Budget saved successfully!");
+    toast.success("Budget percentages saved!");
   };
 
+  // 🔑 Auto-compute allocation in ₦ whenever balance or percentages change
   const budgets = useMemo(() => {
     const map = {};
     Object.keys(budgetPercentages).forEach((cat) => {
@@ -52,29 +62,58 @@ export default function BudgetTracker() {
     return map;
   }, [budgetPercentages, totalBalance]);
 
+  // Categorize spending
   const categorized = useMemo(() => {
     const map = {};
-    transactions.forEach((tx) => {
+    localTx.forEach((tx) => {
       const cat = categorizeTransaction(tx);
       map[cat] = map[cat] || 0;
       map[cat] += Math.abs(tx.amount);
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [transactions]);
+  }, [localTx]);
 
+  // Alerts for overspending
   const alerts = useMemo(() => {
-    const list = [];
-    categorized.forEach((cat) => {
-      if (budgets[cat.name] && cat.value > budgets[cat.name]) {
-        list.push({
-          category: cat.name,
-          spent: cat.value,
-          budget: budgets[cat.name],
-        });
-      }
-    });
-    return list;
+    return categorized
+      .filter((cat) => budgets[cat.name] && cat.value > budgets[cat.name])
+      .map((cat) => ({
+        category: cat.name,
+        spent: cat.value,
+        budget: budgets[cat.name],
+      }));
   }, [categorized, budgets]);
+
+  // 🔔 Detect new inflows (credits) and show toast
+  useEffect(() => {
+    if (prevTxRef.current.length > 0 && localTx.length > prevTxRef.current.length) {
+      const newTxs = localTx.filter(
+        (tx) => !prevTxRef.current.some((prev) => prev.id === tx.id)
+      );
+      newTxs.forEach((tx) => {
+        if (tx.amount > 0) {
+          toast.success(
+            `₦${tx.amount.toLocaleString()} deposited — budgets re-allocated!`
+          );
+        }
+      });
+    }
+    prevTxRef.current = localTx;
+  }, [localTx]);
+
+  const simulateDeposit = () => {
+  const fakeDeposit = {
+    id: `sim_${Date.now()}`,
+    accountId: "acc_1",
+    date: new Date().toISOString(), // keep full ISO
+    description: "Simulated Deposit",
+    amount: 50000,
+    type: "credit",
+  };
+  // add to the front
+  setLocalTx((prev) => [fakeDeposit, ...prev]);
+};
+
 
   const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     const radius = innerRadius + (outerRadius - innerRadius) / 2;
@@ -123,9 +162,15 @@ export default function BudgetTracker() {
           </div>
 
           <div className="bg-white p-4 rounded-md border">
-            <div className="mb-2 font-semibold">Recent Transactions</div>
-            {transactions.length > 0 ? (
-              <TransactionList transactions={transactions} />
+            <div className="flex justify-between items-center mb-2">
+              <div className="font-semibold">Recent Transactions</div>
+              {/* 🟢 Demo button */}
+              <Button size="sm" onClick={simulateDeposit}>
+                Simulate ₦50,000 Deposit
+              </Button>
+            </div>
+            {localTx.length > 0 ? (
+              <TransactionList transactions={localTx} />
             ) : (
               <div className="text-sm text-slate-500">No transactions yet.</div>
             )}
@@ -163,7 +208,7 @@ export default function BudgetTracker() {
             <div className="text-sm text-slate-500 mt-4">No spending data yet.</div>
           )}
 
-          {/* Progress Bars with tooltips */}
+          {/* Progress Bars */}
           <div>
             {DEFAULT_CATEGORIES.map((cat) => {
               const spent = categorized.find((c) => c.name === cat)?.value || 0;
@@ -173,14 +218,17 @@ export default function BudgetTracker() {
                 <div key={cat} className="mb-3 group relative">
                   <div className="flex justify-between text-sm mb-1">
                     <span className="capitalize">{cat}</span>
-                    <span>{spent.toLocaleString()} / {budget.toLocaleString()}</span>
+                    <span>
+                      {spent.toLocaleString()} / {budget.toLocaleString()}
+                    </span>
                   </div>
                   <div className="w-full h-3 bg-gray-200 rounded overflow-hidden relative">
                     <div
-                      className={`h-3 rounded transition-all duration-500 ${spent > budget ? "bg-red-500" : "bg-green-500"}`}
+                      className={`h-3 rounded transition-all duration-500 ${
+                        spent > budget ? "bg-red-500" : "bg-green-500"
+                      }`}
                       style={{ width: `${percent}%` }}
                     />
-                    {/* Tooltip */}
                     <div className="absolute left-1/2 -translate-x-1/2 -top-8 opacity-0 group-hover:opacity-100 transition bg-gray-800 text-white text-xs px-2 py-1 rounded shadow">
                       {percent.toFixed(1)}% of budget used
                     </div>
@@ -198,7 +246,8 @@ export default function BudgetTracker() {
             ) : (
               alerts.map((a) => (
                 <div key={a.category} className="mt-2 text-sm text-red-600">
-                  {a.category} exceeded: spent {a.spent.toLocaleString()} of {a.budget.toLocaleString()}
+                  {a.category} exceeded: spent {a.spent.toLocaleString()} of{" "}
+                  {a.budget.toLocaleString()}
                 </div>
               ))
             )}
