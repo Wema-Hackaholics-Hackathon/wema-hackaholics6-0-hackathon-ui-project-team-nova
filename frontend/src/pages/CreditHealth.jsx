@@ -7,7 +7,7 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 
 const COLORS = ["#ef4444", "#f59e0b", "#10b981", "#3b82f6"];
 
-export default function CreditScoreCard({ params }) {
+export default function CreditScoreCard({ params = {} }) {
   const {
     surplus = 0,
     outstandingDebt = 0,
@@ -45,7 +45,7 @@ export default function CreditScoreCard({ params }) {
   const [score, setScore] = useState(computeScore());
   const [displayScore, setDisplayScore] = useState(score);
 
-  // Animate when params change
+  // Animate score when params change
   useEffect(() => {
     const newScore = computeScore();
     let start = displayScore;
@@ -75,7 +75,7 @@ export default function CreditScoreCard({ params }) {
       ? "Good"
       : "Excellent";
 
-  // Gauge pie
+  // Gauge pie segments
   const data = [
     { name: "Poor", value: 280 },
     { name: "Fair", value: 180 },
@@ -83,12 +83,15 @@ export default function CreditScoreCard({ params }) {
     { name: "Excellent", value: 190 },
   ];
 
+  // Map score → angle
   const angle = ((displayScore - 300) / (850 - 300)) * 360;
 
-  // Generate insights
+  // Generate insights dynamically
   const insights = [];
   if (surplus < 0) {
-    insights.push("Your expenses are higher than your income. Cut back on spending to improve your surplus.");
+    insights.push(
+      "Your expenses are higher than your income. Cut back on spending to improve your surplus."
+    );
   } else if (surplus > monthlyIncome * 0.3) {
     insights.push("Great job! You’re saving a healthy portion of your income.");
   }
@@ -106,7 +109,9 @@ export default function CreditScoreCard({ params }) {
   }
 
   if (numSubscriptions > 5) {
-    insights.push("You have many active subscriptions. Consider canceling unused ones to free up funds.");
+    insights.push(
+      "You have many active subscriptions. Consider canceling unused ones to free up funds."
+    );
   }
 
   if (avgBalance < monthlyExpenses * 0.5) {
