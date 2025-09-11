@@ -12,9 +12,6 @@ const createUser = async (req, res) => {
     if (!name || !email || !password )
       return res.status(400).json({ message: "All fields are required" });
 
-    if (String(bvn).length !== 11)
-      return res.status(400).json({ message: "BVN must be 11 digits" });
-
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "Email already registered" });
@@ -22,7 +19,7 @@ const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ name, email, password: hashedPassword, bvn });
+    const user = new User({ name, email, password: hashedPassword});
     await user.save();
 
     // Demo linked accounts
