@@ -11,7 +11,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-bold">CampusCart Finance</h2>
+        <h2 className="text-lg font-bold">ALAT Companion</h2>
         <button
           className="md:hidden p-2"
           onClick={() => setSidebarOpen(false)}
@@ -26,31 +26,31 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           Accounts
         </Link>
         <Link
-          to="/budget"
+          to="/dashboard/budget"
           className="block text-slate-700 hover:text-indigo-600"
         >
           Budget
         </Link>
         <Link
-          to="/subscriptions"
+          to="/dashboard/subscriptions"
           className="block text-slate-700 hover:text-indigo-600"
         >
           Subscriptions
         </Link>
         <Link
-          to="/credit-health"
+          to="/dashboard/credit-health"
           className="block text-slate-700 hover:text-indigo-600"
         >
           Credit Health
         </Link>
         <Link
-          to="/loans"
+          to="/dashboard/loans"
           className="block text-slate-700 hover:text-indigo-600"
         >
           Loans
         </Link>
         <Link
-          to="/cards"
+          to="/dashboard/cards"
           className="block text-slate-700 hover:text-indigo-600"
         >
           Credit Cards
