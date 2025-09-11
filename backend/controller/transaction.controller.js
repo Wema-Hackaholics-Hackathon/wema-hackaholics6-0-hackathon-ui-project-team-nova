@@ -41,39 +41,34 @@ const getTransactions = async (req, res) => {
 };
 
 
-const getCurrentMonthCategorySpending = async (req, res) => {
+ const getCurrentMonthCategorySpending = async (req, res) => {
   try {
     const { accountId } = req.params;
 
-    // 1️⃣ Validate accountId
     if (!mongoose.Types.ObjectId.isValid(accountId)) {
       return res.status(400).json({ message: "Invalid accountId" });
     }
     const accountObjectId = new mongoose.Types.ObjectId(accountId);
 
-    // 2️⃣ Get current month & year
     const now = new Date();
-    const currentMonth = now.getMonth() + 1; // JS months: 0-11
+    const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    // 3️⃣ Aggregate transactions for this account and current month
+    const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
+    const endOfMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+
     const spending = await Transaction.aggregate([
       {
         $match: {
-          accountId: accountObjectId,      // Only this account
-          type: "debit",                  // Only spending
-          $expr: {
-            $and: [
-              { $eq: [{ $month: "$date" }, currentMonth] },
-              { $eq: [{ $year: "$date" }, currentYear] }
-            ]
-          }
+          accountId: accountObjectId,
+          type: "debit",
+          date: { $gte: startOfMonth, $lte: endOfMonth }
         }
       },
       {
         $group: {
-          _id: "$category",               // Group by category
-          totalSpent: { $sum: "$amount" } // Sum the amount per category
+          _id: "$category",
+          totalSpent: { $sum: "$amount" }
         }
       },
       {
@@ -83,13 +78,11 @@ const getCurrentMonthCategorySpending = async (req, res) => {
           totalSpent: 1
         }
       },
-      { $sort: { totalSpent: -1 } } // Optional: sort by highest spending first
+      { $sort: { totalSpent: -1 } }
     ]);
 
     res.json({ success: true, month: currentMonth, year: currentYear, spending });
-
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
