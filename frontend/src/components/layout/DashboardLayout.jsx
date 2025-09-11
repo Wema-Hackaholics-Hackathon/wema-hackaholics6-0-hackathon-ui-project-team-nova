@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }) {
       <div className="flex-1 md:ml-64">
         {/* Top bar (mobile only) */}
         <header className="flex items-center justify-between p-4 border-b bg-white shadow-sm md:hidden">
-          <h1 className="text-lg font-bold">CampusCart Finance</h1>
+          <h1 className="text-lg font-bold">ALAT Companion</h1>
           <button onClick={() => setSidebarOpen(true)} className="p-2">
             <Menu className="w-6 h-6" />
           </button>
