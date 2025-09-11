@@ -1,9 +1,10 @@
-/* eslint-disable no-unused-vars */
+// /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAccounts from "../hooks/useAccounts";
 import AccountCard from "../components/AccountCard";
 import SubscriptionList from "../components/SubscriptionList";
+import FacialMatch from "../components/FacialMatch"; // <-- import your facial match component
 import { Button } from "../components/ui/button";
 import { toast } from "react-toastify";
 
@@ -12,7 +13,7 @@ import {
   mockAccounts,
   mockTransactions,
   mockSubscriptions,
-} from "../mock/mockData"; // adjust path if needed
+} from "../mock/mockData";
 
 export default function Onboarding({ onFinish }) {
   const navigate = useNavigate();
@@ -26,31 +27,22 @@ export default function Onboarding({ onFinish }) {
     transactions,
   } = useAccounts();
 
-  // Steps: 1-BVN, 2-Accounts, 3-Subscriptions, 4-Done
+  // Steps: 1-BVN, 2-Facial, 3-Accounts, 4-Subscriptions, 5-Done
   const [step, setStep] = useState(1);
   const [bvn, setBvn] = useState("");
   const [bvnError, setBvnError] = useState("");
   const [bvnLoading, setBvnLoading] = useState(false);
+  const [facialVerified, setFacialVerified] = useState(false);
 
-  // Navigation
   const nextStep = async () => {
     if (step === 1) {
       if (!validateBVN()) return;
       setBvnLoading(true);
       try {
-        // Simulate API verification delay
         await new Promise((res) => setTimeout(res, 1500));
         toast.success("BVN verified successfully!");
-
-        // ✅ Load mock accounts + transactions immediately
-        mockAccounts.forEach((acc) => addAccount(acc));
-        setTransactions(mockTransactions);
-
-        // Optionally preload subscriptions
-        setSubscriptions(mockSubscriptions);
-
         setStep(2);
-      } catch (err) {
+      } catch {
         toast.error("BVN verification failed.");
       } finally {
         setBvnLoading(false);
@@ -58,12 +50,26 @@ export default function Onboarding({ onFinish }) {
       return;
     }
 
-    setStep((s) => Math.min(s + 1, 4));
+    if (step === 2) {
+      if (!facialVerified) {
+        toast.info("Please complete facial verification first.");
+        return;
+      }
+      // Load accounts & subscriptions after successful facial verification
+      if (accounts.length === 0) {
+        mockAccounts.forEach((acc) => addAccount(acc));
+        setTransactions(mockTransactions);
+        setSubscriptions(mockSubscriptions);
+      }
+      setStep(3);
+      return;
+    }
+
+    setStep((s) => Math.min(s + 1, 5));
   };
 
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
-  // BVN validation
   const validateBVN = () => {
     if (!/^\d{11}$/.test(bvn)) {
       setBvnError("BVN must be exactly 11 digits");
@@ -73,7 +79,6 @@ export default function Onboarding({ onFinish }) {
     return true;
   };
 
-  // Mock subscription detection
   const detectSubscriptions = () => {
     const detected = transactions.filter(
       (tx) =>
@@ -83,11 +88,7 @@ export default function Onboarding({ onFinish }) {
 
     const merged = [...subscriptions];
     detected.forEach((d) => {
-      if (
-        !merged.find(
-          (m) => m.vendor?.toLowerCase() === d.description?.toLowerCase()
-        )
-      ) {
+      if (!merged.find((m) => m.vendor?.toLowerCase() === d.description?.toLowerCase())) {
         merged.push({
           id: d.id,
           vendor: d.description,
@@ -99,14 +100,13 @@ export default function Onboarding({ onFinish }) {
     });
 
     setSubscriptions(merged);
-    if (detected.length > 0)
-      toast.success(`${detected.length} subscription(s) detected!`);
-    else toast.info("No subscriptions detected");
+    detected.length > 0
+      ? toast.success(`${detected.length} subscription(s) detected!`)
+      : toast.info("No subscriptions detected");
   };
 
-  // Automatically finish onboarding when step 4 is reached
   useEffect(() => {
-    if (step === 4) {
+    if (step === 5) {
       const timeout = setTimeout(() => {
         toast.success("Onboarding complete! Redirecting to dashboard...");
         if (onFinish) onFinish();
@@ -125,9 +125,10 @@ export default function Onboarding({ onFinish }) {
       {/* Step Indicator */}
       <div className="flex justify-between mb-4 text-sm text-slate-500">
         <span className={step >= 1 ? "font-semibold" : ""}>1. BVN</span>
-        <span className={step >= 2 ? "font-semibold" : ""}>2. View Accounts</span>
-        <span className={step >= 3 ? "font-semibold" : ""}>3. Subscriptions</span>
-        <span className={step >= 4 ? "font-semibold" : ""}>4. Done</span>
+        <span className={step >= 2 ? "font-semibold" : ""}>2. Facial Verification</span>
+        <span className={step >= 3 ? "font-semibold" : ""}>3. Accounts</span>
+        <span className={step >= 4 ? "font-semibold" : ""}>4. Subscriptions</span>
+        <span className={step >= 5 ? "font-semibold" : ""}>5. Done</span>
       </div>
 
       {/* Step Content */}
@@ -136,10 +137,7 @@ export default function Onboarding({ onFinish }) {
           <p className="text-sm text-slate-600 text-center">
             Enter your Bank Verification Number (BVN)
           </p>
-          <label
-            htmlFor="bvn"
-            className="block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="bvn" className="block text-sm font-medium text-slate-700">
             BVN
           </label>
           <input
@@ -154,41 +152,48 @@ export default function Onboarding({ onFinish }) {
           {bvnError && <p className="text-red-600 text-xs mt-1">{bvnError}</p>}
         </div>
       )}
-
-      {step === 2 && (
-        <div className="space-y-4">
-          {accounts.length ? (
-            <div className="grid md:grid-cols-2 gap-4">
-              {accounts.map((a) => (
-                <AccountCard key={a.id} account={a} onRemove={removeAccount} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-sm text-slate-500 text-center">
-              No accounts found yet.
-            </div>
-          )}
-        </div>
-      )}
+{step === 2 && (
+  <div className="space-y-4 text-center">
+    <p className="text-sm text-slate-600 mb-2">
+      Perform facial verification to secure your account
+    </p>
+    <FacialMatch onSuccess={() => setFacialVerified(true)} />
+    {!facialVerified && (
+      <p className="text-xs text-slate-500 mt-2">
+        Complete the facial scan to proceed
+      </p>
+    )}
+  </div>
+)}
 
       {step === 3 && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            We can detect recurring subscriptions for you:
-          </p>
-          <Button onClick={detectSubscriptions}>Detect Subscriptions</Button>
-          {subscriptions.length > 0 && (
-            <SubscriptionList
-              subscriptions={subscriptions}
-              onRemove={(id) =>
-                setSubscriptions((prev) => prev.filter((s) => s.id !== id))
-              }
-            />
+          {accounts.length ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {accounts.map((a, idx) => (
+                <AccountCard key={`${a.id}-${idx}`} account={a} onRemove={removeAccount} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-slate-500 text-center">No accounts found yet.</div>
           )}
         </div>
       )}
 
       {step === 4 && (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">We can detect recurring subscriptions for you:</p>
+          <Button onClick={detectSubscriptions}>Detect Subscriptions</Button>
+          {subscriptions.length > 0 && (
+            <SubscriptionList
+              subscriptions={subscriptions}
+              onRemove={(id) => setSubscriptions((prev) => prev.filter((s) => s.id !== id))}
+            />
+          )}
+        </div>
+      )}
+
+      {step === 5 && (
         <div className="text-center space-y-4">
           <p className="text-lg font-medium">You're all set!</p>
           <p className="text-sm text-slate-600">Redirecting to dashboard...</p>
@@ -202,11 +207,11 @@ export default function Onboarding({ onFinish }) {
             Back
           </Button>
         )}
-        {step < 4 && (
+        {step < 5 && (
           <Button
             onClick={nextStep}
             className="ml-auto"
-            disabled={bvnLoading && step === 1}
+            disabled={(step === 1 && bvnLoading) || (step === 2 && !facialVerified)}
           >
             {step === 1 && bvnLoading ? "Verifying..." : "Next"}
           </Button>

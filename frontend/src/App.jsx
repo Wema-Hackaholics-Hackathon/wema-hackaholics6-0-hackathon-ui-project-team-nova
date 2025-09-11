@@ -15,17 +15,24 @@ import CreditHealth from "./pages/CreditHealth";
 import LoanTracker from "./pages/LoanTracker";
 import CreditCardAccess from "./pages/CreditCardAccess";
 
+// Compliance pages
+import FacialRecognition from "./components/FacialMatch";
+import ConsentDashboard from "./components/ConsentDashboard";
+import AuditLog from "./components/AuditLog";
+
 // 404 component
 function NotFound() {
   return (
     <div className="p-6 text-center">
       <h2 className="text-xl font-bold text-red-600 mb-2">404 - Page Not Found</h2>
-      <p className="text-slate-600 mb-4">The page you are looking for does not exist.</p>
+      <p className="text-slate-600 mb-4">
+        The page you are looking for does not exist.
+      </p>
     </div>
   );
 }
 
-// Wrapper to handle auth & onboarding
+// Protected route wrapper
 function ProtectedRoute({ user, onboarded, children }) {
   if (!user) return <Navigate to="/signup" />;
   if (!onboarded) return <Navigate to="/onboarding" />;
@@ -60,7 +67,12 @@ export default function App() {
           path="/signup"
           element={
             !user ? (
-              <Signup onSuccess={(u, navigate) => { setUser(u); navigate("/onboarding"); }} />
+              <Signup
+                onSuccess={(u, navigate) => {
+                  setUser(u);
+                  navigate("/onboarding");
+                }}
+              />
             ) : (
               <Navigate to="/" />
             )
@@ -79,25 +91,30 @@ export default function App() {
           }
         />
 
-        {/* Dashboard protected routes */}
+        {/* Dashboard Protected Routes */}
         <Route
-          path="/dashboard/*"
+          path="/dashboard"
           element={
             <ProtectedRoute user={user} onboarded={onboarded}>
-              <DashboardLayout>
-                <Routes>
-                  <Route path="/" element={<UnifiedAccounts />} />
-                  <Route path="budget" element={<BudgetTracker />} />
-                  <Route path="subscriptions" element={<CardSubscriptions />} />
-                  <Route path="credit-health" element={<CreditHealth />} />
-                  <Route path="loans" element={<LoanTracker />} />
-                  <Route path="cards" element={<CreditCardAccess />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </DashboardLayout>
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          {/* Nested routes inside Outlet */}
+          <Route index element={<UnifiedAccounts />} />
+          <Route path="budget" element={<BudgetTracker />} />
+          <Route path="subscriptions" element={<CardSubscriptions />} />
+          <Route path="credit-health" element={<CreditHealth />} />
+          <Route path="loans" element={<LoanTracker />} />
+          <Route path="cards" element={<CreditCardAccess />} />
+
+          {/* Compliance routes */}
+          <Route path="facial-verification" element={<FacialRecognition />} />
+          <Route path="consent" element={<ConsentDashboard />} />
+          <Route path="audit-log" element={<AuditLog />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFound />} />
