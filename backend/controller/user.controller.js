@@ -119,6 +119,8 @@ const loginUser = async (req, res) => {
   }
 };
 
+
+
 const linkBvn = async (req, res) => {
   try {
     const { bvn } = req.body;
@@ -128,14 +130,40 @@ const linkBvn = async (req, res) => {
     }
 
     const user = await User.findOne({ bvn });
-    if (!user)
+    if (!user) {
       return res.status(404).json({ message: "No user linked to BVN" });
+    }
 
-    const accounts = await Account.find({ userId: user._id });
+    // You can store "isBvnLinked" flag in the user model if you want
+    user.isBvnLinked = true;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "BVN linked successfully",
+      userId: user._id,
+      userName: user.name,
+      bvnMasked: `***${bvn.slice(-4)}`
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Unable to link BVN" });
+  }
+};
+
+
+const getLinkedAccounts = async (req, res) => {
+  try {
+    const { userId } = req.params; // 👈 pass userId from frontend after BVN link
+
+    const accounts = await Account.find({ userId });
+    if (!accounts || accounts.length === 0) {
+      return res.status(404).json({ message: "No accounts found for user" });
+    }
 
     const linkedAccounts = await Promise.all(
       accounts.map(async (a) => {
-        const loans = await Loan.find({ accountId: a._id }); // loans or []
+        const loans = await Loan.find({ accountId: a._id });
         const transactions = await Transaction.find({ accountId: a._id });
 
         return {
@@ -144,21 +172,20 @@ const linkBvn = async (req, res) => {
           mask: a.mask || `****${a.number.slice(-4)}`,
           balance: a.balance,
           currency: a.currency,
-          loans: loans.length > 0 ? loans : [],
-          transactions: transactions.length ? transactions : [],
+          loans,
+          transactions,
         };
       })
     );
+
     res.status(200).json({
       success: true,
-      bvnMasked: `***${bvn.slice(-4)}`,
-      linkedAccounts: linkedAccounts,
-      userId: user._id,
-      userName: user.name,
+      userId,
+      linkedAccounts
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Unable to link account" });
+    res.status(500).json({ message: "Unable to fetch linked accounts" });
   }
 };
 
@@ -166,4 +193,5 @@ module.exports = {
   createUser,
   linkBvn,
   loginUser,
+  getLinkedAccounts
 };
