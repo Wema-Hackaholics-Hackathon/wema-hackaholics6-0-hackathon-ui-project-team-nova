@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import useAccounts from "../hooks/useAccounts";
 import LoanItem from "../components/LoanItem";
@@ -157,7 +158,7 @@ export default function LoanTracker() {
       </div>
 
       {/* Manual Loan Form */}
-      <div className="p-4 border rounded-md bg-white">
+      {/* <div className="p-4 border rounded-md bg-white">
         <div className="font-medium mb-3">Add Loan (manual)</div>
         {["lender", "principal", "outstanding", "rate", "tenureMonths", "nextDue"].map((f) => (
           <div key={f} className="mb-2">
@@ -173,7 +174,7 @@ export default function LoanTracker() {
         >
           {loading ? "Adding..." : "Add Loan"}
         </Button>
-      </div>
+      </div> */}
 
       {/* Loan List */}
       {loans.length > 0 ? (
