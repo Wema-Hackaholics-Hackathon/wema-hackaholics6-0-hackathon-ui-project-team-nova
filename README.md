@@ -10,7 +10,7 @@
 
 ## 🚀 Live Demo
 
-*   **Live Application:** https://wema-hackaholics6-0-hackathon-ui-pr-two.vercel.app/
+*   **Live Application:** https://wema-hackaholics6-0hackathon-ui-pro.vercel.app/
 *   **Backend API:** https://wema-hackaholics6-0-hackathon-ui-project.onrender.com
 *   **Recorded Demo:** https://www.loom.com/share/f52f89d9c9644e0c843d515119e82c39.
 
