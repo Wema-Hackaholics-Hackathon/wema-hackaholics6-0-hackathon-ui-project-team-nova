@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell } from "recharts";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Info } from "lucide-react";
 
-const COLORS = ["#ef4444", "#f59e0b", "#10b981", "#3b82f6"];
+const COLORS = ["#ef4444", "#f59e0b", "#10b981", "#3b82f6"]; // Poor → Excellent
 
 export default function CreditScoreCard({ params = {} }) {
   const {
@@ -18,20 +18,18 @@ export default function CreditScoreCard({ params = {} }) {
     numSubscriptions = 0,
   } = params;
 
-  // Compute credit score dynamically
   const computeScore = () => {
     let score = 600; // baseline
 
     // Surplus effect
-    if (surplus > 0) score += Math.min(50, surplus / 1000);
-    else score -= Math.min(50, Math.abs(surplus) / 1000);
+    score += surplus > 0 ? Math.min(50, surplus / 1000) : -Math.min(50, Math.abs(surplus) / 1000);
 
     // Debt effect
     if (outstandingDebt > monthlyIncome * 3) score -= 100;
     else if (outstandingDebt > 0) score -= 40;
 
     // Repayment history effect
-    score += (repaymentHistory - 0.5) * 200; // ranges roughly -100 to +100
+    score += (repaymentHistory - 0.5) * 200; 
 
     // Balance effect
     score += Math.min(80, avgBalance / 2000);
@@ -45,7 +43,6 @@ export default function CreditScoreCard({ params = {} }) {
   const [score, setScore] = useState(computeScore());
   const [displayScore, setDisplayScore] = useState(score);
 
-  // Animate score when params change
   useEffect(() => {
     const newScore = computeScore();
     let start = displayScore;
@@ -56,26 +53,15 @@ export default function CreditScoreCard({ params = {} }) {
     const interval = setInterval(() => {
       frame++;
       setDisplayScore(Math.round(start + step * frame));
-      if (frame >= 30) {
-        clearInterval(interval);
-        setDisplayScore(newScore);
-      }
+      if (frame >= 30) clearInterval(interval);
     }, 20);
 
     setScore(newScore);
   }, [params]);
 
-  // Score label
   const scoreLabel =
-    score < 580
-      ? "Poor"
-      : score < 670
-      ? "Fair"
-      : score < 740
-      ? "Good"
-      : "Excellent";
+    score < 580 ? "Poor" : score < 670 ? "Fair" : score < 740 ? "Good" : "Excellent";
 
-  // Gauge pie segments
   const data = [
     { name: "Poor", value: 280 },
     { name: "Fair", value: 180 },
@@ -83,47 +69,26 @@ export default function CreditScoreCard({ params = {} }) {
     { name: "Excellent", value: 190 },
   ];
 
-  // Map score → angle
   const angle = ((displayScore - 300) / (850 - 300)) * 360;
 
-  // Generate insights dynamically
   const insights = [];
-  if (surplus < 0) {
-    insights.push(
-      "Your expenses are higher than your income. Cut back on spending to improve your surplus."
-    );
-  } else if (surplus > monthlyIncome * 0.3) {
-    insights.push("Great job! You’re saving a healthy portion of your income.");
-  }
-
-  if (outstandingDebt > monthlyIncome * 2) {
-    insights.push("Your debt is quite high compared to your income. Focus on paying it down.");
-  } else if (outstandingDebt === 0) {
-    insights.push("You’re debt-free. This boosts your credit health!");
-  }
-
-  if (repaymentHistory < 0.8) {
-    insights.push("Missed loan repayments detected. Try to pay on time to improve your score.");
-  } else {
-    insights.push("Strong repayment history. Keep it up!");
-  }
-
-  if (numSubscriptions > 5) {
-    insights.push(
-      "You have many active subscriptions. Consider canceling unused ones to free up funds."
-    );
-  }
-
-  if (avgBalance < monthlyExpenses * 0.5) {
-    insights.push("Your balances are running low relative to expenses. Build a stronger buffer.");
-  }
+  if (surplus < 0) insights.push("📉 Expenses exceed income. Consider budgeting carefully.");
+  else if (surplus > monthlyIncome * 0.3) insights.push("💰 Great! You’re saving a healthy portion of your income.");
+  if (outstandingDebt > monthlyIncome * 2) insights.push("⚠️ Debt is high relative to income. Focus on repayment.");
+  else if (outstandingDebt === 0) insights.push("✅ Debt-free! This boosts your credit health.");
+  if (repaymentHistory < 0.8) insights.push("⏰ Missed repayments detected. Aim to pay on time to improve your score.");
+  else insights.push("🏆 Strong repayment history. Keep it up!");
+  if (numSubscriptions > 5) insights.push("📝 Many active subscriptions. Cancel unused ones to free funds.");
+  if (avgBalance < monthlyExpenses * 0.5) insights.push("💡 Low balances relative to expenses. Build a buffer.");
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center space-y-4">
-      <h3 className="text-lg font-semibold mb-3">Credit Score</h3>
+    <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center space-y-5 w-full max-w-md mx-auto">
+      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+        <Info size={18} /> Credit Health Score
+      </h3>
 
+      {/* Gauge */}
       <div className="relative flex items-center justify-center">
-        {/* Gauge background */}
         <PieChart width={200} height={200}>
           <Pie
             data={data}
@@ -140,7 +105,6 @@ export default function CreditScoreCard({ params = {} }) {
           </Pie>
         </PieChart>
 
-        {/* Needle */}
         <motion.div
           className="absolute w-1 h-20 bg-slate-700 origin-bottom rounded"
           style={{ bottom: "50%", transformOrigin: "bottom center" }}
@@ -148,7 +112,6 @@ export default function CreditScoreCard({ params = {} }) {
           transition={{ type: "spring", stiffness: 120, damping: 15 }}
         />
 
-        {/* Score value */}
         <div className="absolute text-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -167,7 +130,7 @@ export default function CreditScoreCard({ params = {} }) {
       </div>
 
       {/* Trends */}
-      <div className="flex gap-4 text-sm">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm">
         <div className="flex items-center gap-1 text-green-600">
           <ArrowUp size={14} /> Income: ₦{monthlyIncome.toLocaleString()}
         </div>
@@ -176,9 +139,11 @@ export default function CreditScoreCard({ params = {} }) {
         </div>
       </div>
 
-      {/* Dynamic Insights */}
-      <div className="w-full mt-4">
-        <h4 className="text-sm font-semibold text-slate-700 mb-2">Insights</h4>
+      {/* Insights */}
+      <div className="w-full mt-3">
+        <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
+          <Info size={14} /> Insights
+        </h4>
         <ul className="space-y-1 text-xs text-slate-600">
           {insights.map((tip, i) => (
             <li key={i} className="flex items-start gap-2">
