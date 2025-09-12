@@ -12,7 +12,7 @@
 
 *   **Live Application:** [Link to your deployed Vercel/Netlify/Render URL]
 *   **Backend API:** https://wema-hackaholics6-0-hackathon-ui-project.onrender.com
-*   **Recorded Demo:** [Link to your recorded demo explaining how your solution works using Loom].
+*   **Recorded Demo:** https://www.loom.com/share/f52f89d9c9644e0c843d515119e82c39.
 
 
 ---
